@@ -1,7 +1,7 @@
 ---
 name: korea-job-search
 version: 1.0.0
-description: 대한민국 채용공고를 고용24 공식 API와 네이버·토스·쿠팡 등 기업 자체 채용 소스에서 통합 검색합니다. 한국 일자리, 국내 취업, 서울·경기·인천 채용, 신입·경력·계약직 검색, Korea jobs 요청에 사용합니다. 잡코리아·사람인·원티드 공개 페이지 수집은 이용조건 확인 후 명시적으로 선택할 때만 사용합니다.
+description: 대한민국 채용공고를 네이버·토스·쿠팡 등 기업 자체 채용 소스에서 통합 검색합니다. 승인된 기업회원은 고용24 공식 API를 선택적으로 사용할 수 있습니다. 한국 일자리, 국내 취업, 서울·경기·인천 채용, 신입·경력·계약직 검색, Korea jobs 요청에 사용합니다. 잡코리아·사람인·원티드 공개 페이지 수집은 이용조건 확인 후 명시적으로 선택할 때만 사용합니다.
 context: fork
 enabled: true
 allowed-tools: Bash(python .agents/skills/korea-job-search/cli.py *), Bash(python3 .agents/skills/korea-job-search/cli.py *)
@@ -10,7 +10,7 @@ allowed-tools: Bash(python .agents/skills/korea-job-search/cli.py *), Bash(pytho
 # 한국 채용 통합 검색
 
 `integrations/job-searcher` 서브모듈의 수집기를 `ai-job-search` 포털 계약으로 변환합니다.
-기본 소스는 공식·1차 소스인 `work24,naver,toss,coupang`입니다.
+개인 사용자 기본 소스는 기업 자체 채용 소스인 `naver,toss,coupang`입니다.
 
 ## 설치
 
@@ -19,8 +19,8 @@ git submodule update --init --recursive
 python -m pip install -r integrations/job-searcher/requirements.txt
 ```
 
-고용24는 별도의 공식 API 키가 필요합니다. 키가 없거나 승인되지 않은 경우 고용24만 경고로
-건너뛰고 다른 기본 소스는 계속 검색합니다.
+고용24는 승인된 기업회원 전용이며 기본 검색에 포함하지 않습니다. 이용 자격과 승인 목적을
+확인한 기업회원만 `--source work24`와 별도의 공식 API 키로 명시적으로 선택합니다.
 
 ```powershell
 $env:WORK24_API_KEY="발급받은-키"
@@ -30,16 +30,14 @@ $env:WORK24_API_KEY="발급받은-키"
 
 ```bash
 python .agents/skills/korea-job-search/cli.py search \
-  --query "데이터 엔지니어" --region 서울 --region 경기 \
-  --career experienced --min-career-months 24 --max-career-months 120 \
-  --jobage 14 --limit 20 --format json
+  --query "데이터 엔지니어" --jobage 14 --limit 20 --format json
 ```
 
 주요 옵션:
 
-- `--source`: 쉼표 또는 반복 지정. 기본값 `work24,naver,toss,coupang`
-- `--region`: 한국 지역명 또는 고용24 공식 코드(고용24 서버 필터)
-- `--occupation`: 고용24 직종코드
+- `--source`: 쉼표 또는 반복 지정. 기본값 `naver,toss,coupang`; `work24`는 승인된 기업회원 전용
+- `--region`: 고용24 선택 시 사용하는 한국 지역명 또는 공식 코드
+- `--occupation`: 고용24 선택 시 사용하는 직종코드
 - `--employment`: `permanent`, `contract`, `dispatch`, `replacement`
 - `--career`: `new`, `experienced`, `any`
 - `--education`: `any`, `high-school`, `associate`, `bachelor`, `master`, `doctor`

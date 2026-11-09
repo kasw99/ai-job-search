@@ -9,7 +9,8 @@
 - 날짜는 `YYYY-MM-DD`, 금액은 원화(`KRW`)를 기본으로 표시
 - 서울·경기·인천 등 한국 지역명과 고용24 지역코드 지원
 - 직무 키워드, 고용형태, 신입/경력, 학력, 경력 개월, 등록일 조건 지원
-- 고용24 공식 Open API와 네이버·토스·쿠팡의 1차 채용 소스를 기본 검색
+- 네이버·토스·쿠팡의 기업 자체 채용 소스를 개인 사용자 기본 검색으로 사용
+- 고용24 공식 Open API는 승인된 기업회원이 `--source work24`로 명시한 경우에만 사용
 - `itssosunny/job-searcher`를 서브모듈로 연결해 소스별 코드를 중복하지 않음
 - 잡코리아·사람인·원티드 같은 공개 페이지 수집기는 기본 비활성화하고 명시적 선택 시에만 사용
 
@@ -24,32 +25,28 @@ python -m pip install -r integrations/job-searcher/requirements.txt
 그다음 Claude Code에서 `/setup`을 실행해 프로필과 희망 직무·지역을 입력하고 `/scrape`로
 채용공고를 찾습니다. 원본의 전체 준비 절차는 [SETUP.md](SETUP.md)를 참고하세요.
 
-## 고용24 공식 API
+## 고용24 공식 API — 승인된 기업회원 전용
 
 고용24 [Open API 안내](https://www.work24.go.kr/cm/e/a/0110/selectOpenApiIntro.do)에 따라
-기업회원으로 이용 신청과 승인을 받은 뒤 키를 환경 변수로 전달합니다.
+기업회원으로 이용 신청과 승인을 받은 계정만 사용할 수 있습니다. 개인 구직자의 기본
+검색에는 포함되지 않으며, 자격과 승인 목적을 확인한 기업회원만 명시적으로 선택합니다.
 
 ```powershell
 $env:WORK24_API_KEY="발급받은-키"
-python .agents/skills/korea-job-search/cli.py search --query "백엔드 개발자" --region 서울 --jobage 14 --format table
+python .agents/skills/korea-job-search/cli.py search --source work24 --query "백엔드 개발자" --region 서울 --jobage 14 --format table
 ```
 
 macOS/Linux에서는 `export WORK24_API_KEY="..."`를 사용합니다. 키는 저장소나 `.env`에
 커밋하지 마세요. 공식 명세상 영리법인(개인사업자 포함)은 채용정보 API를 사용할 수
 없으므로, 발급받은 키의 승인 목적과 약관을 준수해야 합니다.
 
-키가 없으면 고용24만 경고로 건너뛰고 네이버·토스·쿠팡 소스는 계속 검색합니다.
+고용24를 지정하지 않으면 키를 확인하거나 고용24에 요청하지 않습니다.
 
 ## 검색 조건 예시
 
 ```bash
 python .agents/skills/korea-job-search/cli.py search \
-  --query "AI 엔지니어" \
-  --region 서울 --region 경기 \
-  --career experienced --min-career-months 24 --max-career-months 84 \
-  --employment permanent \
-  --education bachelor \
-  --jobage 14 --limit 20 --format json
+  --query "AI 엔지니어" --jobage 14 --limit 20 --format json
 ```
 
 지원 소스와 접근 방식은 `python .agents/skills/korea-job-search/cli.py sources`로 확인할 수 있습니다.

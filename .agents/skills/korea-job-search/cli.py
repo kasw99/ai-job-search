@@ -17,7 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_INTEGRATION = REPO_ROOT / "integrations" / "job-searcher"
 
 SOURCES: dict[str, dict[str, str]] = {
-    "work24": {"skill": "work24-collect", "mode": "official_api", "label": "고용24"},
+    "work24": {"skill": "work24-collect", "mode": "enterprise_member_api", "label": "고용24(승인된 기업회원 전용)"},
     "naver": {"skill": "naver-recruit-collect", "mode": "first_party_api", "label": "네이버 채용"},
     "toss": {"skill": "toss-career-collect", "mode": "first_party_api", "label": "토스 채용"},
     "coupang": {"skill": "coupang-collect", "mode": "first_party_ats", "label": "쿠팡 채용"},
@@ -32,7 +32,7 @@ SOURCES: dict[str, dict[str, str]] = {
     "rallit": {"skill": "rallit-collect", "mode": "public_page_opt_in", "label": "랠릿"},
     "incruit": {"skill": "incruit-collect", "mode": "public_page_opt_in", "label": "인크루트"},
 }
-DEFAULT_SOURCES = ("work24", "naver", "toss", "coupang")
+DEFAULT_SOURCES = ("naver", "toss", "coupang")
 OPT_IN_MODES = {"public_page_opt_in"}
 
 
@@ -213,7 +213,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
     search = sub.add_parser("search", help="여러 한국 채용 소스를 공식 경로 우선으로 검색")
     search.add_argument("--query", "-q", required=True)
-    search.add_argument("--source", action="append", help="work24,naver,toss,coupang 등. 쉼표 또는 반복 지정")
+    search.add_argument("--source", action="append", help="기본값 naver,toss,coupang. work24는 승인된 기업회원만 명시적으로 지정")
     search.add_argument("--allow-public-pages", action="store_true", help="공개 검색 페이지 수집기를 명시적으로 허용")
     search.add_argument("--region", action="append", default=[])
     search.add_argument("--occupation", action="append", default=[])

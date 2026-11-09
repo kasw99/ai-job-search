@@ -25,8 +25,9 @@ def args(**overrides):
 
 
 class KoreaJobSearchBridgeTests(unittest.TestCase):
-    def test_defaults_to_official_first_sources(self):
-        self.assertEqual(bridge.parse_sources(None), list(bridge.DEFAULT_SOURCES))
+    def test_defaults_to_individual_safe_sources(self):
+        self.assertEqual(bridge.parse_sources(None), ["naver", "toss", "coupang"])
+        self.assertNotIn("work24", bridge.DEFAULT_SOURCES)
 
     def test_builds_work24_specific_filters_without_a_secret(self):
         command = bridge.collector_command(Path("integration"), "work24", args())
