@@ -50,6 +50,21 @@ def search_output_source(search_ts: Path) -> str:
     return "\n".join(f.read_text(encoding="utf-8") for f in files)
 
 
+def emitted_fields(portal: Path) -> tuple[set[str], str | None]:
+    """Read the normalized search result shape from a Bun or Python portal CLI."""
+    search_ts = portal / "cli" / "src" / "commands" / "search.ts"
+    if search_ts.exists():
+        source = search_output_source(search_ts)
+        return set(re.findall(r"^\s*([a-zA-Z_][a-zA-Z0-9_]*):", source, re.MULTILINE)), None
+    cli_py = portal / "cli.py"
+    if cli_py.exists():
+        source = cli_py.read_text(encoding="utf-8")
+        # Python normalized results use literal dictionary keys. Restrict the
+        # scan to identifier-shaped strings so prose cannot satisfy a field.
+        return set(re.findall(r'^\s*"([a-zA-Z_][a-zA-Z0-9_]*)"\s*:', source, re.MULTILINE)), None
+    return set(), "no cli/src/commands/search.ts or cli.py"
+
+
 class ScrapeSearchOutputContractTests(unittest.TestCase):
     """Every portal CLI's search output must carry the Step 2 contract fields."""
 
@@ -62,12 +77,10 @@ class ScrapeSearchOutputContractTests(unittest.TestCase):
         contract = derive_contract_fields()
         failures: list[str] = []
         for portal in PORTAL_CLIS:
-            search_ts = portal / "cli" / "src" / "commands" / "search.ts"
-            if not search_ts.exists():
-                failures.append(f"{portal.name}: no cli/src/commands/search.ts")
+            emitted, error = emitted_fields(portal)
+            if error:
+                failures.append(f"{portal.name}: {error}")
                 continue
-            source = search_output_source(search_ts)
-            emitted = set(re.findall(r"^\s*([a-zA-Z_][a-zA-Z0-9_]*):", source, re.MULTILINE))
             missing = sorted(contract - emitted)
             if missing:
                 failures.append(f"{portal.name}: missing {missing} in search output")

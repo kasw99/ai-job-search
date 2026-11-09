@@ -262,6 +262,25 @@ class SkillGrantGuardTests(GuardRepoFixture):
         self.assertEqual(result.returncode, 1)
         self.assertIn("other-search", result.stdout)
 
+    def test_python_portal_skill_may_grant_only_its_own_cli(self):
+        python_skill = self.root / ".agents" / "skills" / "python-search" / "SKILL.md"
+        python_skill.parent.mkdir(parents=True)
+        (python_skill.parent / "cli.py").write_text("# present\n", encoding="utf-8")
+        for own in (
+            "Bash(python .agents/skills/python-search/cli.py *)",
+            "Bash(python3 .agents/skills/python-search/cli.py:*)",
+        ):
+            with self.subTest(own=own):
+                self.write_skill(python_skill, own)
+                result = run_guards(self.root)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.write_skill(
+            python_skill, "Bash(python .agents/skills/other-search/cli.py *)"
+        )
+        result = run_guards(self.root)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("other-search", result.stdout)
+
     def test_portal_skill_may_not_grant_core_tools(self):
         # SECURITY.md promises "exactly that portal's own cli/src/cli.ts and
         # nothing else"; the guard has to make that true.

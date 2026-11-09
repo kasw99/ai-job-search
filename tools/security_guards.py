@@ -76,6 +76,8 @@ ALLOWED_PERMISSIONS = {
     "Bash(bun run .agents/skills/jobnet-search/cli/src/cli.ts:*)",
     "Bash(bun run .agents/skills/linkedin-search/cli/src/cli.ts:*)",
     "Bash(bun run .agents/skills/freehire-search/cli/src/cli.ts:*)",
+    "Bash(python .agents/skills/korea-job-search/cli.py:*)",
+    "Bash(python3 .agents/skills/korea-job-search/cli.py:*)",
     "Bash(python salary_lookup.py:*)",
     "Bash(python3 salary_lookup.py:*)",
     "Bash(python tools/rank_state.py:*)",
@@ -377,15 +379,22 @@ def _tool_entries(value) -> list:
 
 
 def _own_cli_grant(path: Path) -> set:
-    """The two spellings of 'this portal skill may run its own CLI'."""
+    """Exact grants for a portal skill's own reviewed Bun or Python CLI."""
     try:
         rel = path.relative_to(ROOT).as_posix()
     except ValueError:
         return set()
     parts = rel.split("/")
     if len(parts) == 4 and parts[:2] == [".agents", "skills"] and parts[3] == "SKILL.md":
-        cli = f"bun run .agents/skills/{parts[2]}/cli/src/cli.ts"
-        return {f"Bash({cli} *)", f"Bash({cli}:*)"}
+        # Existence is checked separately by lint_skills.py. This guard's job
+        # is to make the grant path structurally incapable of naming another
+        # skill or an arbitrary script.
+        bun_cli = f"bun run .agents/skills/{parts[2]}/cli/src/cli.ts"
+        grants = {f"Bash({bun_cli} *)", f"Bash({bun_cli}:*)"}
+        for executable in ("python", "python3"):
+            cli = f"{executable} .agents/skills/{parts[2]}/cli.py"
+            grants.update({f"Bash({cli} *)", f"Bash({cli}:*)"})
+        return grants
     return set()
 
 
@@ -443,7 +452,7 @@ def check_skill_tool_grants() -> None:
                 "a permission allowlist like settings.json. Bare Bash means any command. "
                 "If the grant is intentional, add it to ALLOWED_SKILL_TOOLS in "
                 "tools/security_guards.py in the same PR; a portal skill may grant only "
-                "its own .agents/skills/<name>/cli/src/cli.ts."
+                "its own .agents/skills/<name>/cli/src/cli.ts or cli.py."
             )
 
 

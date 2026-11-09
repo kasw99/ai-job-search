@@ -1,0 +1,3 @@
+[submodule "integrations/job-searcher"]
+	path = integrations/job-searcher
+	url = https://github.com/kasw99/job-searcher.git
